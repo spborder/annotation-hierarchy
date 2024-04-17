@@ -79,7 +79,8 @@ def main(args):
     if not 'frames' in image_metadata:
         # Grabbing the thumbnail of the image (RGB)
         thumbnail_img = Image.open(BytesIO(requests.get(f'{gc.urlBase}/item/{image_item}/tiles/thumbnail?token={args.girderToken}').content))
-
+        thumb_array = np.array(thumbnail_img)
+        
     else:
         # Getting the max projection of the thumbnail
         thumb_frame_list = []
