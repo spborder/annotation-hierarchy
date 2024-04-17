@@ -251,7 +251,7 @@ def main(args):
     if not args.test_run:
 
         for n in new_annotation_list:
-            gc.post(f'/annotation/item/{args.image}?token={args.girderToken}',
+            gc.post(f'/annotation/item/{args.input_image}?token={args.girderToken}',
                     data = json.dumps(n),
                     headers={
                         'X-HTTP-Method': 'POST',

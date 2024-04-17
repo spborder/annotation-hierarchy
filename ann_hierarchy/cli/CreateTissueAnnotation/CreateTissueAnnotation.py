@@ -71,17 +71,17 @@ def main(args):
     gc.setToken(args.girderToken)
 
     # Getting image information
-    image_metadata = gc.get(f'/item/{args.image}/tiles')
+    image_metadata = gc.get(f'/item/{args.input_image}/tiles')
 
     if not 'frames' in image_metadata:
         # Grabbing the thumbnail of the image (RGB)
-        thumbnail_img = Image.open(BytesIO(requests.get(f'{gc.urlBase}/item/{args.image}/tiles/thumbnail?token={args.girderToken}').content))
+        thumbnail_img = Image.open(BytesIO(requests.get(f'{gc.urlBase}/item/{args.input_image}/tiles/thumbnail?token={args.girderToken}').content))
 
     else:
         # Getting the max projection of the thumbnail
         thumb_frame_list = []
         for f in range(len(image_metadata['frames'])):
-            thumb = Image.open(BytesIO(requests.get(f'{gc.urlBase}/item/{args.image}/tiles/thumbnail?frame={f}&token={args.girderToken}').content))
+            thumb = Image.open(BytesIO(requests.get(f'{gc.urlBase}/item/{args.input_image}/tiles/thumbnail?frame={f}&token={args.girderToken}').content))
             thumb_frame_list.append(thumb)
 
         thumb_array = np.array(thumb_frame_list)
@@ -138,7 +138,7 @@ def main(args):
 
     if not args.test_run:
         # Posting tissue mask annotations
-        gc.post(f'/annotation/item/{args.image}?token={args.girderToken}',
+        gc.post(f'/annotation/item/{args.input_image}?token={args.girderToken}',
                 data = json.dumps(annotation),
                 headers={
                     'X-HTTP-Method': 'POST',
