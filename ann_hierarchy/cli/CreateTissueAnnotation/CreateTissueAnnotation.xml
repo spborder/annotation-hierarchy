@@ -37,9 +37,21 @@
       <default></default>
     </string>
     <boolean>
+      <name>brightfield</name>
+      <longflag>brightField</longflag>
+      <description>Whether or not this is a brightfield histology image, in which case threshold values are inverted (brighter = background)</description>
+      <default>1</default>
+    </boolean>
+    <integer>
+      <name>threshold</name>
+      <longflag>threshold_</longflag>
+      <description>Integer between 0 and 255 to threshold data. (otherwise uses Sauvola)</description>
+      <default>0</default>
+    </integer>
+    <boolean>
       <name>test_run</name>
       <longflag>test_Run</longflag>
-      <description>Select this to not post altered annotations</description>
+      <description>Select this to not post annotations</description>
       <default>0</default>
     </boolean>
   </parameters>
