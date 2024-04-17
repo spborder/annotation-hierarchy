@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<executable>
+  <category>HistomicsTK</category>
+  <title>Create Tissue Mask</title>
+  <description>Create an annotation layer for the tissue mask.</description>
+  <version>0.1.0</version>
+  <documentation-url>https://github.com/spborder/annotation-hierarchy/</documentation-url>
+  <license>Apache 2.0</license>
+  <contributor>Sam Border (UFL)</contributor>
+  <acknowledgements>This work is part of efforts in digital pathology by the Sarder Lab: UFL.</acknowledgements>
+  <parameters>
+    <label>IO</label>
+    <description>Input/output parameters.</description>
+    <image reference="_girder_id_"> 
+      <name>input_image</name>
+      <label>Image</label>
+      <description>Image to create tissue mask of.</description>
+      <channel>input</channel>
+      <index>0</index>
+    </image>
+  </parameters>
+  <parameters advanced="true">
+    <label>Girder API URL and Key</label>
+    <description>A Girder API URL and token for Girder client</description>
+    <string>
+      <name>girderApiUrl</name>
+      <longflag>api-url</longflag>
+      <label>Girder API URL</label>
+      <description>A Girder API URL (e.g., https://girder.example.com:443/api/v1)</description>
+      <default></default>
+    </string>
+    <string>
+      <name>girderToken</name>
+      <longflag>token</longflag>
+      <label>Girder API Token</label>
+      <description>A Girder token identifying a user session</description>
+      <default></default>
+    </string>
+    <boolean>
+      <name>test_run</name>
+      <longflag>test_Run</longflag>
+      <description>Select this to not post altered annotations</description>
+      <default>0</default>
+    </boolean>
+  </parameters>
+</executable>
