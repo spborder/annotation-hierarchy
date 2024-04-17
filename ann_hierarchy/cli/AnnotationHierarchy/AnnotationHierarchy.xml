@@ -74,12 +74,14 @@
     <string>
       <name>json_spec</name>
       <longflag>json_Spec</longflag>
+      <label>JSON Specifications</label>
       <description>Add json specifications here. Make sure use_json is set to True to enable. Ignores other inputs.</description>
       <default>"{}"</default>
     </string>
     <boolean>
       <name>test_run</name>
       <longflag>test_Run</longflag>
+      <label>Test Run?</label>
       <description>Select this to not post altered annotations</description>
       <default>0</default>
     </boolean>

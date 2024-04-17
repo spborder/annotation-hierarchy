@@ -48,12 +48,14 @@ def create_polygon_list(json_annotations:dict)->list:
                 # If the constructed polygon is invalid, use make_valid to make it valid.
                 made_valid = make_valid(el_poly)
                 if made_valid.geom_type=='Polygon':
-                    poly_list.append(made_valid)
+                    if made_valid.is_valid:
+                        poly_list.append(made_valid)
                 elif made_valid.geom_type in ['MultiPolygon','GeometryCollection']:
                     for g in made_valid.geoms:
                         # Only add valid polygons to the list of polygons
                         if g.geom_type=='Polygon':
-                            poly_list.append(g)
+                            if g.is_valid:
+                                poly_list.append(g)
     
     return poly_list
 
@@ -76,11 +78,11 @@ def make_annotation_from_shape(shape_list,name)->dict:
             hole_list = []
             for h in hole_coords:
                 hole_list.append([
-                    [i[0],i[1]]
+                    [i[0],i[1],0]
                     for i in list(h.coords)
                 ])
 
-            annotation_dict['elements'].append({
+            annotation_dict['annotation']['elements'].append({
                 'type': 'polyline',
                 'points': [list(i)+[0] for i in coords],
                 'holes': hole_list,
@@ -120,12 +122,11 @@ def main(args):
         if args.operation.lower() in ["+","plus"]:
             # Addition of one annotation to another. (returns list of shapes)
             merged_annotations = unary_union(poly_list_1+poly_list_2)
-            merged_list = merged_annotations
+            merged_list = merged_annotations.geoms
 
         elif args.operation.lower() in ["-","minus"]:
             # Subtraction of one annotation from another (returns one MultiPolygon)
             merged_annotations = MultiPolygon(poly_list_1).difference(MultiPolygon(poly_list_2))
-
             merged_list = merged_annotations.geoms
 
         # Creating new annotation from merged annotation geoms
@@ -180,12 +181,11 @@ def main(args):
                 if op["operation"].lower() in ["+","plus"]:
                     # Addition of one annotation to another. (returns list of shapes)
                     merged_annotations = unary_union(poly_list_1+poly_list_2)
-                    merged_list = merged_annotations
+                    merged_list = merged_annotations.geoms
 
                 elif op["operation"].lower() in ["-","minus"]:
                     # Subtraction of one annotation from another (returns one MultiPolygon)
                     merged_annotations = MultiPolygon(poly_list_1).difference(MultiPolygon(poly_list_2))
-
                     merged_list = merged_annotations.geoms
 
                 # Creating new annotation from merged annotation geoms

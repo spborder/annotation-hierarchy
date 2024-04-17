@@ -42,6 +42,8 @@ def make_annotation_from_shape(shape_list,name,properties)->dict:
         if shape.geom_type=='Polygon' and shape.is_valid:
             # Exterior "shell" coordinates
             coords = list(shape.exterior.coords)
+            """
+            # Ignoring holes for tissue
             hole_coords = list(shape.interiors)
             hole_list = []
             for h in hole_coords:
@@ -49,8 +51,9 @@ def make_annotation_from_shape(shape_list,name,properties)->dict:
                     [i[0],i[1]]
                     for i in list(h.coords)
                 ])
-
-            annotation_dict['elements'].append({
+            """
+            hole_list = []
+            annotation_dict['annotation']['elements'].append({
                 'type': 'polyline',
                 'points': [list(i)+[0] for i in coords],
                 'holes': hole_list,
@@ -103,18 +106,21 @@ def main(args):
     # Mean of all channels/frames to make grayscale mask
     gray_mask = np.mean(thumb_array,axis=-1)
 
-    if not args.threshold==0:
-        threshold_val = threshold_sauvola(gray_mask,window_size=25)
-        tissue_mask = gray_mask <= threshold_val
+    if args.threshold==0:
+        threshold_val = 'sauvola'
+        tissue_mask = gray_mask <= threshold_sauvola(gray_mask,window_size=25)
+
     else:
         threshold_val = args.threshold
         tissue_mask = gray_mask <= args.threshold
 
-    tissue_mask = remove_small_holes(tissue_mask)
+    print(f'threshold value: {threshold_val}, type: {type(threshold_val)}')
+    print(np.sum(tissue_mask))
+    tissue_mask = remove_small_holes(tissue_mask,area_threshold=150)
 
     labeled_mask = label(tissue_mask)
     tissue_pieces = np.unique(labeled_mask).tolist()
-
+    print(tissue_pieces)
     tissue_shape_list = []
     for piece in tissue_pieces[1:]:
         tissue_contours = find_contours(labeled_mask==piece)
@@ -138,7 +144,7 @@ def main(args):
                     tissue_shape_list.append(obj_polygon)
 
     
-    annotation = make_annotation_from_shape(tissue_shape_list,'Tissue Mask',properties={'Threshold': float(threshold_val)})
+    annotation = make_annotation_from_shape(tissue_shape_list,'Tissue Mask',properties={'Threshold': 'S'})
 
     if not args.test_run:
         # Posting tissue mask annotations
