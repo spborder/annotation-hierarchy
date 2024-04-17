@@ -85,6 +85,12 @@ def main(args):
             thumb_frame_list.append(thumb)
 
         thumb_array = np.array(thumb_frame_list)
+
+    # Getting scale factors for thumbnail image to full-size image
+    thumbX, thumbY = np.shape(thumb_array)[1],np.shape(thumb_array)[0]
+    scale_x = image_metadata['sizeX']/thumbX
+    scale_y = image_metadata['sizeY']/thumbY
+    
     
     # Making the whole thing grayscale
     if args.brightfield:
@@ -111,7 +117,7 @@ def main(args):
 
         for contour in tissue_contours:
 
-            poly_list = [(i[1],i[0]) for i in contour]
+            poly_list = [(i[1]*scale_x,i[0]*scale_y) for i in contour]
             if len(poly_list)>2:
                 obj_polygon = Polygon(poly_list)
 
