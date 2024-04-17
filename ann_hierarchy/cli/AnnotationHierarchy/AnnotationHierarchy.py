@@ -99,6 +99,9 @@ def main(args):
     gc = girder_client.GirderClient(apiUrl = args.girderApiUrl)
     gc.setToken(args.girderToken)
 
+    # Getting item Id from file
+    image_item = gc.get(f'/file/{args.input_image}')['itemId']
+
     if not args.use_json:
         print(f'Running {args.ann_id_1} {args.operation} {args.ann_id_2} to create {args.new_name}')
 
@@ -251,7 +254,7 @@ def main(args):
     if not args.test_run:
 
         for n in new_annotation_list:
-            gc.post(f'/annotation/item/{args.input_image}?token={args.girderToken}',
+            gc.post(f'/annotation/item/{image_item}?token={args.girderToken}',
                     data = json.dumps(n),
                     headers={
                         'X-HTTP-Method': 'POST',
