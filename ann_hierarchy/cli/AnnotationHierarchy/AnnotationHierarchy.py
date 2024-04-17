@@ -73,6 +73,8 @@ def make_annotation_from_shape(shape_list,name)->dict:
         
         if shape.geom_type=='Polygon' and shape.is_valid:
             # Exterior "shell" coordinates
+            shape = shape.simplify(tolerance=0.05,preserve_topology=False)
+
             coords = list(shape.exterior.coords)
             hole_coords = list(shape.interiors)
             hole_list = []
@@ -82,13 +84,19 @@ def make_annotation_from_shape(shape_list,name)->dict:
                     for i in list(h.coords)
                 ])
 
-            annotation_dict['annotation']['elements'].append({
-                'type': 'polyline',
-                'points': [list(i)+[0] for i in coords],
-                'holes': hole_list,
-                'id': uuid.uuid4().hex[:24],
-                'closed': True
-            })
+            if len(coords)>2:
+                annotation_dict['annotation']['elements'].append({
+                    'type': 'polyline',
+                    'points': [list(i)+[0] for i in coords],
+                    'holes': hole_list,
+                    'id': uuid.uuid4().hex[:24],
+                    'closed': True
+                })
+            else: 
+                print('Too few coords')
+        else:
+            print(f'shape.geom_type: {shape.geom_type}')
+            print(f'shape.is_validJ: {shape.is_valid}')
 
     return annotation_dict
 
@@ -122,12 +130,31 @@ def main(args):
         if args.operation.lower() in ["+","plus"]:
             # Addition of one annotation to another. (returns list of shapes)
             merged_annotations = unary_union(poly_list_1+poly_list_2)
-            merged_list = merged_annotations.geoms
+            if merged_annotations.geom_type=='Polygon':
+                merged_list = [merged_annotations]
+            elif merged_annotations.geom_type in ['MultiPolygon','GeometryCollection']:
+                merged_list = merged_annotations.geoms
 
         elif args.operation.lower() in ["-","minus"]:
             # Subtraction of one annotation from another (returns one MultiPolygon)
-            merged_annotations = MultiPolygon(poly_list_1).difference(MultiPolygon(poly_list_2))
-            merged_list = merged_annotations.geoms
+            multi_1 = MultiPolygon(poly_list_1).buffer(0)
+            if not multi_1.is_valid:
+                multi_1 = make_valid(multi_1)
+
+            multi_2 = MultiPolygon(poly_list_2).buffer(0)
+            if not multi_2.is_valid:
+                multi_2 = make_valid(multi_2)
+
+            
+            print(f'multi_1 is valid: {multi_1.is_valid}, geoms: {len(multi_1.geoms) if multi_1.geom_type=="MultiPolygon" else 1}')
+            print(f'multi_2 is valid: {multi_2.is_valid}, geoms: {len(multi_2.geoms) if multi_2.geom_type=="MultiPolygon" else 1}')
+
+            merged_annotations = multi_1.difference(multi_2)
+
+            if merged_annotations.geom_type=='Polygon':
+                merged_list = [merged_annotations]
+            elif merged_annotations.geom_type in ['MultiPolygon','GeometryCollection']:
+                merged_list = merged_annotations.geoms
 
         # Creating new annotation from merged annotation geoms
         new_annotation = make_annotation_from_shape(merged_list,args.new_name)
@@ -255,13 +282,16 @@ def main(args):
     if not args.test_run:
 
         for n in new_annotation_list:
-            gc.post(f'/annotation/item/{image_item}?token={args.girderToken}',
-                    data = json.dumps(n),
-                    headers={
-                        'X-HTTP-Method': 'POST',
-                        'Content-Type':'application/json'
-                    }
-                )
+            if len(n['annotation']['elements'])>0:
+                gc.post(f'/annotation/item/{image_item}?token={args.girderToken}',
+                        data = json.dumps(n),
+                        headers={
+                            'X-HTTP-Method': 'POST',
+                            'Content-Type':'application/json'
+                        }
+                    )
+            else:
+                print('No elements in the annotation!')
     
     else:
 

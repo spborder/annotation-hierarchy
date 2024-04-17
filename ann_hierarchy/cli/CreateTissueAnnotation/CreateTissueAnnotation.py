@@ -17,13 +17,14 @@ from PIL import Image
 from io import BytesIO
 import requests
 
-from skimage.filters import threshold_sauvola
+from skimage.filters import threshold_otsu
 from skimage.morphology import remove_small_holes
 from skimage.measure import label, find_contours
 
 import json
 from shapely.geometry import Polygon
 from shapely.validation import make_valid
+from shapely.ops import unary_union
 import uuid
 
 
@@ -107,8 +108,8 @@ def main(args):
     gray_mask = np.mean(thumb_array,axis=-1)
 
     if args.threshold==0:
-        threshold_val = 'sauvola'
-        tissue_mask = gray_mask <= threshold_sauvola(gray_mask,window_size=25)
+        threshold_val = threshold_otsu(gray_mask)
+        tissue_mask = gray_mask <= threshold_val
 
     else:
         threshold_val = args.threshold
@@ -143,8 +144,14 @@ def main(args):
                 else:
                     tissue_shape_list.append(obj_polygon)
 
-    
-    annotation = make_annotation_from_shape(tissue_shape_list,'Tissue Mask',properties={'Threshold': 'S'})
+    # Merging shapes together to remove holes
+    merged_tissue = unary_union(tissue_shape_list)
+    if merged_tissue.geom_type=='Polygon':
+        merged_tissue = [merged_tissue]
+    elif merged_tissue.geom_type in ['MultiPolygon','GeometryCollection']:
+        merged_tissue = merged_tissue.geoms
+
+    annotation = make_annotation_from_shape(merged_tissue,'Tissue Mask',properties={'Threshold': threshold_val})
 
     if not args.test_run:
         # Posting tissue mask annotations
