@@ -88,6 +88,7 @@ def make_annotation_from_shape(shape_list,name)->dict:
                 'closed': True
             })
 
+    return annotation_dict
 
 
 def main(args):

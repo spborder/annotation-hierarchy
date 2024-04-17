@@ -59,7 +59,7 @@ def make_annotation_from_shape(shape_list,name,properties)->dict:
                 'user': properties
             })
 
-
+    return annotation_dict
 
 def main(args):
     
@@ -80,7 +80,7 @@ def main(args):
         # Grabbing the thumbnail of the image (RGB)
         thumbnail_img = Image.open(BytesIO(requests.get(f'{gc.urlBase}/item/{image_item}/tiles/thumbnail?token={args.girderToken}').content))
         thumb_array = np.array(thumbnail_img)
-        
+
     else:
         # Getting the max projection of the thumbnail
         thumb_frame_list = []
