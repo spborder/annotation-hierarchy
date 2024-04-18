@@ -90,22 +90,23 @@ def main(args):
         thumb_frame_list = []
         for f in range(len(image_metadata['frames'])):
             thumb = Image.open(BytesIO(requests.get(f'{gc.urlBase}/item/{image_item}/tiles/thumbnail?frame={f}&token={args.girderToken}').content))
-            thumb_frame_list.append(thumb)
+            thumb_frame_list.append(np.squeeze(np.mean(thumb,axis=-1)))
 
         thumb_array = np.array(thumb_frame_list)
 
+    print(f'shape of thumbnail array: {np.shape(thumb_array)}')
     # Getting scale factors for thumbnail image to full-size image
     thumbX, thumbY = np.shape(thumb_array)[1],np.shape(thumb_array)[0]
     scale_x = image_metadata['sizeX']/thumbX
     scale_y = image_metadata['sizeY']/thumbY
-    
     
     # Making the whole thing grayscale
     if args.brightfield:
         thumb_array = 255-thumb_array
 
     # Mean of all channels/frames to make grayscale mask
-    gray_mask = np.mean(thumb_array,axis=-1)
+    gray_mask = np.squeeze(np.mean(thumb_array,axis=-1))
+    print(f'shape of grayscale mask: {np.shape(gray_mask)}')
 
     if args.threshold==0:
         threshold_val = threshold_otsu(gray_mask)
@@ -115,13 +116,10 @@ def main(args):
         threshold_val = args.threshold
         tissue_mask = gray_mask <= args.threshold
 
-    print(f'threshold value: {threshold_val}, type: {type(threshold_val)}')
-    print(np.sum(tissue_mask))
     tissue_mask = remove_small_holes(tissue_mask,area_threshold=150)
 
     labeled_mask = label(tissue_mask)
     tissue_pieces = np.unique(labeled_mask).tolist()
-    print(tissue_pieces)
     tissue_shape_list = []
     for piece in tissue_pieces[1:]:
         tissue_contours = find_contours(labeled_mask==piece)
