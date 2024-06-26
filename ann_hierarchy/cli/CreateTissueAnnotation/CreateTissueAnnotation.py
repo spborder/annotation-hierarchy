@@ -89,10 +89,11 @@ def main(args):
         # Getting the max projection of the thumbnail
         thumb_frame_list = []
         for f in range(len(image_metadata['frames'])):
-            thumb = Image.open(BytesIO(requests.get(f'{gc.urlBase}/item/{image_item}/tiles/thumbnail?frame={f}&token={args.girderToken}').content))
-            thumb_frame_list.append(np.squeeze(np.mean(thumb,axis=-1)))
+            thumb = np.array(Image.open(BytesIO(requests.get(f'{gc.urlBase}/item/{image_item}/tiles/thumbnail?frame={f}&token={args.girderToken}').content)))
+            print(np.shape(thumb))
+            thumb_frame_list.append(np.max(thumb,axis=-1)[:,:,None])
 
-        thumb_array = np.array(thumb_frame_list)
+        thumb_array = np.concatenate(tuple(thumb_frame_list),axis=-1)
 
     print(f'shape of thumbnail array: {np.shape(thumb_array)}')
     # Getting scale factors for thumbnail image to full-size image
@@ -116,10 +117,12 @@ def main(args):
         threshold_val = args.threshold
         tissue_mask = gray_mask <= args.threshold
 
+    print(f'threshold: {threshold_val}')
     tissue_mask = remove_small_holes(tissue_mask,area_threshold=150)
 
     labeled_mask = label(tissue_mask)
     tissue_pieces = np.unique(labeled_mask).tolist()
+    print(f'Found: {len(tissue_pieces)-1} tissue pieces!')
     tissue_shape_list = []
     for piece in tissue_pieces[1:]:
         tissue_contours = find_contours(labeled_mask==piece)
